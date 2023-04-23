@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
 import time
+import can
 import canopen
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description = 'canio arguments')
-parser.add_argument("can_id", help = "can ID to use", type = str)
+parser.add_argument("can_interface", help = "can0 or can1 ...", type = str)
 parser.add_argument("can_bitrate", help = "can bitrate", type = str)
-parser.add_argument("node_id", help = "node ID", type = str)
+parser.add_argument("can_id", help = "can id of the device", type = str)
+parser.add_argument("node_id", help = "lss node ID", type = str)
 
 class send_cmd:
     
-    can_id = parser.parse_args().can_id
+    can_interface = parser.parse_args().can_interface
     bitra = int(parser.parse_args().can_bitrate)
+    can_id = parser.parse_args().can_id
     node_id = int(parser.parse_args().node_id)
     
     def __init__(self) -> None:
         self.network = canopen.Network()
-        self.network.connect(bustype='socketcan', channel=self.can_id, bitrate=self.bitra)
-        self.node = self.network.add_node(self.node_id, 'objdict.eds')
-        self.network.nmt.state = 'OPERATIONAL'
+        self.network.connect(bustype='socketcan', channel=self.can_interface, bitrate=self.bitra)
+        self.node = self.network.add_node(int(self.can_id), 'objdict.eds')
 
+        self.node.emcy.add_callback(self.handle_error)
+        self.node.objectdictionary['0x1006'].raw = 100000
+        self.network.sync.start()
+
+        self.network.nmt.state = 'OPERATIONAL'
+    
     def PowerErrorReport(self):
         power_state = {
                 '0': 'no error',
@@ -146,19 +154,42 @@ class send_cmd:
         except Exception as e:
             print(e)
 
+    def config_node_id(self) -> None:
+        try:
+            vendor_id = self.node.sdo[0x1018][1].raw
+            print("Vendor-ID: ", vendor_id)
+            product_code = self.node.sdo[0x1018][2].raw
+            print("Product Code: ", product_code)
+            revision_version = self.node.sdo[0x1018][3].raw
+            print("Revision Version: ", revision_version)
+            serial_number = self.node.sdo[0x1018][4].raw
+            print("Serial Number: ", serial_number)
+        
+            ret_bool = self.network.lss.send_switch_state_selective(vendor_id, product_code, revision_version, serial_number)
+
+            if ret_bool:
+                node_id = self.network.lss.inquire_node_id()
+                print("node_id:", node_id)
+
+                self.network.lss.configure_node_id(3)
+                time.sleep(0.5)
+                self.network.lss.store_configuration()
+                time.sleep(0.5)
+                self.network.lss.send_switch_state_global(self.network.lss.WAITING_STATE)
+                time.sleep(0.5)
+
+        except Exception as e:
+            print(e)
+
+    def handle_error(self):
+        self.network.reset_all_nodes()
+
     def __delattr__(self, __name: str) -> None:
+        self.network.sync.stop()
         self.network.disconnect()
 
 if __name__ == "__main__":
     test1 = send_cmd()
 
-    test1.workModeSwitch('w', 2)
-    test1.workModeSwitch('r')
-    time.sleep(1)
-    test1.workModeSwitch('w', 3)
-    test1.workModeSwitch('r')
-    time.sleep(1)
-    test1.workModeSwitch('w', 1)
-    test1.workModeSwitch('r')
-    time.sleep(1)
+    test1.config_node_id()
 
