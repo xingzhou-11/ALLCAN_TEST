@@ -10,7 +10,7 @@ parser.add_argument("can_bitrate", help = "can bitrate", type = str)
 parser.add_argument("can_id", help = "can id of the device", type = str)
 parser.add_argument("node_id", help = "lss node ID", type = str)
 
-class send_cmd:
+class all_can_canopen():
     
     can_interface = parser.parse_args().can_interface
     bitra = int(parser.parse_args().can_bitrate)
@@ -22,11 +22,18 @@ class send_cmd:
         self.network.connect(bustype='socketcan', channel=self.can_interface, bitrate=self.bitra)
         self.node = self.network.add_node(int(self.can_id), 'objdict.eds')
 
-        self.node.emcy.add_callback(self.handle_error)
-        self.node.objectdictionary['0x1006'].raw = 100000
-        self.network.sync.start()
-
+    def entry_operable(self):
         self.network.nmt.state = 'OPERATIONAL'
+    
+    def set_heartbeat(self, value) -> None:
+        val = value.to_bytes(4, byteorder='little')
+        self.node.sdo.download(0x1017, 0, val)
+
+    def monitor_heartbeat(self):
+        pass
+
+    def handle_error(self):
+        pass
     
     def PowerErrorReport(self):
         power_state = {
@@ -181,15 +188,12 @@ class send_cmd:
         except Exception as e:
             print(e)
 
-    def handle_error(self):
-        self.network.reset_all_nodes()
-
     def __delattr__(self, __name: str) -> None:
         self.network.sync.stop()
         self.network.disconnect()
 
 if __name__ == "__main__":
-    test1 = send_cmd()
+    test1 = all_can_canopen()
 
     test1.config_node_id()
 
