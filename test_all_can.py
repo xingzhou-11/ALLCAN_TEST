@@ -28,12 +28,32 @@ class all_can_canopen():
     def set_heartbeat(self, value) -> None:
         val = value.to_bytes(4, byteorder='little')
         self.node.sdo.download(0x1017, 0, val)
-
+            
     def monitor_heartbeat(self):
-        pass
+        try:
+            self.node.nmt.wait_for_heartbeat()
+            print("CAN Heartbeat Received")
+            return False
+        except canopen.nmt.HeartbeatError:
+            print("CAN Heartbeat Error")
+            return True
 
-    def handle_error(self):
-        pass
+    def monitor_error(self):
+        try:
+            error = self.node.emcy.wait(timeout=1)
+            if error is not None:
+                print(f"Error Code: {error.code:#x}, Error Register: {error.reg:#x}")
+                return True
+        except canopen.emcy.EmcyError:
+            print("No Error Frame Received")
+            return False
+
+    def reset_node(self):
+        try:
+            self.node.nmt.state = 'RESET'
+            print("CAN Error, RESET")
+        except Exception as e:
+            print(e)
     
     def PowerErrorReport(self):
         power_state = {
