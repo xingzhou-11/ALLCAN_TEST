@@ -181,6 +181,24 @@ class all_can_canopen():
         except Exception as e:
             print(e)
 
+    def encoder_read_val(self, operate: str, value=0) -> None:
+        """设置编码器值的上报时间
+
+        Args:
+            operate (str): 'r' or 'w'.
+            value (int, optional): gpio Read report timer (ms). Defaults to 0.
+        """
+        try:
+            if operate == 'r':
+                val = self.node.sdo[0x1801][5]
+                print("read encoder val: ", val.raw)
+            elif operate == 'w':
+                val = value.to_bytes(2, byteorder='little')
+                self.node.sdo.download(0x1801, 5, val)
+                print(f"set encoder timer: {value}ms")
+        except Exception as e:
+            print(e)
+
     def config_node_id(self) -> None:
         try:
             vendor_id = self.node.sdo[0x1018][1].raw
@@ -215,5 +233,8 @@ class all_can_canopen():
 if __name__ == "__main__":
     test1 = all_can_canopen()
 
-    test1.config_node_id()
+    test1.entry_operable()
+    test1.workModeSwitch('w', 1)
+    test1.workModeSwitch('r', 1)
+    test1.gpioPower('w', 1)
 

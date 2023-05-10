@@ -5,11 +5,11 @@ FileRevision=1
 LastEDS=
 EDSVersion=4.0
 Description=
-CreationTime=11:01AM
-CreationDate=04-14-2023
+CreationTime=4:22PM
+CreationDate=05-10-2023
 CreatedBy=
-ModificationTime=11:04AM
-ModificationDate=04-14-2023
+ModificationTime=4:23PM
+ModificationDate=05-10-2023
 ModifiedBy=
 
 [DeviceInfo]
@@ -1168,7 +1168,7 @@ ObjectType=0x7
 ;StorageLocation=ROM
 DataType=0x0006
 AccessType=rw
-DefaultValue=1000
+DefaultValue=0
 PDOMapping=0
 
 [1801sub6]
@@ -1417,7 +1417,7 @@ ObjectType=0x7
 ;StorageLocation=ROM
 DataType=0x0005
 AccessType=rw
-DefaultValue=0
+DefaultValue=1
 PDOMapping=0
 
 [1A01sub1]
@@ -1426,7 +1426,7 @@ ObjectType=0x7
 ;StorageLocation=ROM
 DataType=0x0007
 AccessType=rw
-DefaultValue=0x00000000
+DefaultValue=0x20060020
 PDOMapping=0
 
 [1A01sub2]
@@ -1772,7 +1772,7 @@ DefaultValue=0x00000000
 PDOMapping=0
 
 [ManufacturerObjects]
-SupportedObjects=10
+SupportedObjects=11
 1=0x2001
 2=0x2002
 3=0x2003
@@ -1780,9 +1780,10 @@ SupportedObjects=10
 5=0x2005
 6=0x2006
 7=0x2007
-8=0x2020
-9=0x2100
-10=0x2101
+8=0x2010
+9=0x2020
+10=0x2100
+11=0x2101
 
 [2001]
 ParameterName=powerErrorReport
@@ -1809,7 +1810,7 @@ ObjectType=0x7
 DataType=0x0005
 AccessType=rw
 DefaultValue=1
-PDOMapping=0
+PDOMapping=1
 
 [2004]
 ParameterName=gpioRead
@@ -1827,7 +1828,7 @@ ObjectType=0x7
 DataType=0x0005
 AccessType=rw
 DefaultValue=0
-PDOMapping=0
+PDOMapping=1
 
 [2006]
 ParameterName=encoderValueRead
@@ -1836,7 +1837,7 @@ ObjectType=0x7
 DataType=0x0004
 AccessType=ro
 DefaultValue=0
-PDOMapping=0
+PDOMapping=1
 
 [2007]
 ParameterName=encoderPower
@@ -1845,7 +1846,16 @@ ObjectType=0x7
 DataType=0x0005
 AccessType=rw
 DefaultValue=0
-PDOMapping=0
+PDOMapping=1
+
+[2010]
+ParameterName=led_control
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=rw
+DefaultValue=
+PDOMapping=1
 
 [2020]
 ParameterName=lssNodeId
