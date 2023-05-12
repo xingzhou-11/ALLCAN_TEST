@@ -7,20 +7,25 @@ from argparse import ArgumentParser
 parser = ArgumentParser(description = 'canio arguments')
 parser.add_argument("can_interface", help = "can0 or can1 ...", type = str)
 parser.add_argument("can_bitrate", help = "can bitrate", type = str)
-parser.add_argument("can_id", help = "can id of the device", type = str)
-parser.add_argument("node_id", help = "lss node ID", type = str)
+parser.add_argument("now_node_id", help = "can id of the device", type = str)
+parser.add_argument("--new_node_id", help = "lss node ID", type = str, required=False)
 
 class all_can_canopen():
     
     can_interface = parser.parse_args().can_interface
     bitra = int(parser.parse_args().can_bitrate)
-    can_id = parser.parse_args().can_id
-    node_id = int(parser.parse_args().node_id)
+    now_node_id = parser.parse_args().now_node_id
+    new_node_id = int(parser.parse_args().new_node_id)
+
+    vendor_id = 0
+    product_code = 0
+    revision_version = 0
+    serial_number = 0
     
     def __init__(self) -> None:
         self.network = canopen.Network()
         self.network.connect(bustype='socketcan', channel=self.can_interface, bitrate=self.bitra)
-        self.node = self.network.add_node(int(self.can_id), 'objdict.eds')
+        self.node = self.network.add_node(int(self.now_node_id), 'objdict.eds')
 
     def entry_operable(self):
         self.network.nmt.state = 'OPERATIONAL'
@@ -199,29 +204,35 @@ class all_can_canopen():
         except Exception as e:
             print(e)
 
-    def config_node_id(self) -> None:
+    def config_node_id(self, operate: str, node_id=1) -> None:
         try:
-            vendor_id = self.node.sdo[0x1018][1].raw
-            print("Vendor-ID: ", vendor_id)
-            product_code = self.node.sdo[0x1018][2].raw
-            print("Product Code: ", product_code)
-            revision_version = self.node.sdo[0x1018][3].raw
-            print("Revision Version: ", revision_version)
-            serial_number = self.node.sdo[0x1018][4].raw
-            print("Serial Number: ", serial_number)
-        
-            ret_bool = self.network.lss.send_switch_state_selective(vendor_id, product_code, revision_version, serial_number)
+            if operate == 'r':
+                self.vendor_id = self.node.sdo[0x1018][1]
+                self.product_code = self.node.sdo[0x1018][2]
+                self.revision_version = self.node.sdo[0x1018][3]
+                self.serial_number = self.node.sdo[0x1018][4]
 
-            if ret_bool:
-                node_id = self.network.lss.inquire_node_id()
-                print("node_id:", node_id)
+                print("Vendor-ID str: ", self.vendor_id.get_data().decode('utf-8'))[::-1]
+                print("Vendor-ID int: ", self.vendor_id.raw)
+                print("Product Code int: ", self.product_code.raw)
+                print("Revision Version int: ", self.revision_version.raw)
+                print("Serial Number int: ", self.serial_number.raw)
 
-                self.network.lss.configure_node_id(3)
-                time.sleep(0.5)
-                self.network.lss.store_configuration()
-                time.sleep(0.5)
-                self.network.lss.send_switch_state_global(self.network.lss.WAITING_STATE)
-                time.sleep(0.5)
+            elif operate == 'w':
+                ret_bool = self.network.lss.send_switch_state_selective(self.vendor_id.raw, 
+                                                                        self.product_code.raw, 
+                                                                        self.revision_version.raw, 
+                                                                        self.serial_number.raw)
+
+                if ret_bool:
+                    node_id = self.network.lss.inquire_node_id()
+
+                    self.network.lss.configure_node_id(self.new_node_id)
+                    time.sleep(0.5)
+                    self.network.lss.store_configuration()
+                    time.sleep(0.5)
+                    self.network.lss.send_switch_state_global(self.network.lss.WAITING_STATE)
+                    time.sleep(0.5)
 
         except Exception as e:
             print(e)
@@ -230,11 +241,53 @@ class all_can_canopen():
         self.network.sync.stop()
         self.network.disconnect()
 
-if __name__ == "__main__":
+
+def test_start():
     test1 = all_can_canopen()
-
+    test1.reset_node()
+    time.sleep(0.5)
     test1.entry_operable()
-    test1.workModeSwitch('w', 1)
-    test1.workModeSwitch('r', 1)
-    test1.gpioPower('w', 1)
 
+    print('开始测试')
+    print('模式切换')
+    input('按下任意键继续...')
+    # 模式切换
+    test1.workModeSwitch('w', 1)
+    test1.workModeSwitch('r')
+    time.sleep(0.5)
+
+    test1.workModeSwitch('w', 2)
+    test1.workModeSwitch('r')
+    time.sleep(0.5)
+
+    test1.workModeSwitch('w', 3)
+    test1.workModeSwitch('r')
+    time.sleep(0.5)
+
+    print('读取GPIO')
+    input('回车一次读取一次gpio, 输入 break 退出gpio读取')
+    # 读取GPIO
+    test1.gpioRead()
+
+    # 设置GPIO上报
+    test1.event_timer('w', 0)
+
+    # GPIO输出控制
+    test1.gpioPower('w', 1)
+    test1.gpioPower('r', 0)
+
+    # # 使能编码器
+    test1.encoderPower('w', 1)
+
+    # # 设置编码器值上报周期
+    test1.encoder_read_val('w', 1000)
+
+    while True:
+        print(test1.node.sdo[0x2006].raw)
+        time.sleep(1)
+
+    # LSS服务
+    # test1.config_node_id()
+
+if __name__ == "__main__":
+    test_start()
