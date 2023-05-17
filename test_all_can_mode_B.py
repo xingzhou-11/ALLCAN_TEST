@@ -11,27 +11,27 @@ test1.reset_node()
 time.sleep(0.5)
 test1.entry_operable()
 
-@allure.feature('Modular mode to A')
+@allure.feature('Modular mode to B')
 @allure.tag('commit: 9650868')
-def test_mode_to_A():
-    with allure.step("Write 1 to 0x2003"):
-        test1.workModeSwitch('w', value=1)
+def test_mode_to_B():
+    with allure.step("Write 2 to 0x2003"):
+        test1.workModeSwitch('w', value=2)
 
     with allure.step("Read value from 0x2003"):
         ret = test1.workModeSwitch('r')
-        assert ret == 1
+        assert ret == 2
 
 @allure.feature('Modular mode to 4')
-def test_mode_A_to_4():
+def test_mode_B_to_4():
     with allure.step("Write 1 to 0x2003"):
         ret = test1.workModeSwitch('w', value=4)
         assert ret == False
 
     with allure.step("Read value from 0x2003"):
         ret = test1.workModeSwitch('r')
-        assert ret == 1
+        assert ret == 2
 
-@allure.feature('Mode_A GPIO read 24V input')
+@allure.feature('Mode_B GPIO read 24V input')
 @pytest.mark.parametrize(
     'number, value',
     [
@@ -43,40 +43,48 @@ def test_mode_A_to_4():
     ],
     ids=['GPIO1', 'GPIO2', 'GPIO3', 'GPIO4', 'GPIO5']
 )
-def test_mode_A_read_gpio(number, value):
+def test_mode_B_read_gpio(number, value):
     with allure.step("Read value from 0x2004"):
         input(f'gpio{number} input, press Enter to continue...')
         ret = test1.gpioRead()
-        assert ret == value
+        if number == 5:
+            assert ret == False
+        else:
+            assert ret == value
 
 @allure.feature('Mode_A open GPIO1 ~ GPIO5 24V output')
-def test_mode_A_gpio_24V_output():
+def test_mode_B_gpio_24V_output():
     with allure.step("Write 1 to 0x2005"):
         test1.gpioPower('w', 1)
-        assert input('GPIO1 ~ GPIO5 24V Output correct? (T/F): ') == 'T'
+        assert input('24V Output correct? (T/F): ') == 'T'
 
-@allure.feature('Mode_A close GPIO1 ~ GPIO5 24V output')
-def test_mode_A_close_gpio_24V():
+@allure.feature('Mode_B close GPIO1 ~ GPIO5 24V output')
+def test_mode_B_close_gpio_24V():
     with allure.step("Write 0 to 0x2005"):
         test1.gpioPower('w', 0)
         assert input('GPIO1 ~ GPIO5 No 24V output? (T/F): ') == 'T'
 
-@allure.feature('Mode_A open encoder power')
-def test_mode_A_open_encoder_Power():
+@allure.feature('Mode_B open encoder power')
+def test_mode_B_open_encoder_Power():
     with allure.step("Write 1 to 0x2007"):
         val = test1.encoderPower('w', 1)
-        assert val == False
+        assert val == 1
 
-@allure.feature('Mode_A read encoder value')
-def test_mode_A_read_encoder_value():
+@allure.feature('Mode_B read encoder value')
+def test_mode_B_read_encoder_value():
     with allure.step("Read value from 0x2006"):
         val = test1.encoderValueRead()
-        assert val == False
+        assert val == 0
+    with allure.step("encoder turn one circle, Read value from 0x2006"):
+        input('encoder turn one circle, press Enter to continue...')
+        test1.encoderValueRead()
+        assert input('The value is 4000±200? (T/F): ') == 'T'
 
-@allure.feature('Mode_A open GPIO1 ~ GPIO4 5V output')
-def test_mode_A_gpio_5V_output():
+@allure.feature('Mode_B open GPIO1 ~ GPIO4 5V output')
+def test_mode_B_gpio_5V_output():
+    
     with allure.step("Write 1 to 0x2009"):
-        val = test1.Power_5V('w', 0x0F)
+        val = test1.Power_5V('w', 1)
         assert val == False
         assert input('GPIO1 ~ GPIO4 No 5V output? (T/F): ') == 'T'
 
@@ -84,16 +92,6 @@ def test_mode_A_gpio_5V_output():
 def test_mode_to_C():
     with allure.step("Write 3 to 0x2003"):
         test1.workModeSwitch('w', value=3)
-
-    with allure.step("Read value from 0x2003"):
-        ret = test1.workModeSwitch('r')
-        assert ret == 3
-
-@allure.feature('Modular mode to 4')
-def test_mode_C_to_4():
-    with allure.step("Write 1 to 0x2003"):
-        ret = test1.workModeSwitch('w', value=4)
-        assert ret == False
 
     with allure.step("Read value from 0x2003"):
         ret = test1.workModeSwitch('r')
@@ -149,5 +147,5 @@ def test_lss_sever():
         test2.reset_node()
 
 if __name__ == '__main__':
-    pytest.main(['-s', '-q','test_all_can_mode_A.py','--clean-alluredir','--alluredir=allure-results'])
+    pytest.main(['-s', '-q','test_all_can_mode_B.py','--clean-alluredir','--alluredir=allure-results'])
     os.system(r"allure generate -c -o allure-report")

@@ -5,11 +5,11 @@ FileRevision=1
 LastEDS=
 EDSVersion=4.0
 Description=
-CreationTime=4:22PM
-CreationDate=05-10-2023
+CreationTime=12:51PM
+CreationDate=05-15-2023
 CreatedBy=
-ModificationTime=4:23PM
-ModificationDate=05-10-2023
+ModificationTime=12:55PM
+ModificationDate=05-15-2023
 ModifiedBy=
 
 [DeviceInfo]
@@ -1772,7 +1772,7 @@ DefaultValue=0x00000000
 PDOMapping=0
 
 [ManufacturerObjects]
-SupportedObjects=11
+SupportedObjects=13
 1=0x2001
 2=0x2002
 3=0x2003
@@ -1780,10 +1780,12 @@ SupportedObjects=11
 5=0x2005
 6=0x2006
 7=0x2007
-8=0x2010
-9=0x2020
-10=0x2100
-11=0x2101
+8=0x2008
+9=0x2009
+10=0x2010
+11=0x2020
+12=0x2100
+13=0x2101
 
 [2001]
 ParameterName=powerErrorReport
@@ -1846,6 +1848,24 @@ ObjectType=0x7
 DataType=0x0005
 AccessType=rw
 DefaultValue=0
+PDOMapping=1
+
+[2008]
+ParameterName=pwmControl
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0004
+AccessType=rw
+DefaultValue=
+PDOMapping=1
+
+[2009]
+ParameterName=gpioOutput
+ObjectType=0x7
+;StorageLocation=RAM
+DataType=0x0005
+AccessType=rw
+DefaultValue=
 PDOMapping=1
 
 [2010]

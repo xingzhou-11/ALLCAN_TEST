@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
 import canopen
-import time
-# from argparse import ArgumentParser
-
-# parser = ArgumentParser(description = 'canio arguments')
-# parser.add_argument("can_interface", help = "can0 or can1 ...", type = str)
-# parser.add_argument("can_bitrate", help = "can bitrate", type = str)
-# parser.add_argument("now_node_id", help = "can id of the device", type = str)
-# parser.add_argument("--new_node_id", help = "lss node ID", type = str, required=False)
 
 class all_can_canopen():
     vendor_id = 0
