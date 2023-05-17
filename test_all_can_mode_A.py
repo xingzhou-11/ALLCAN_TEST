@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from all_can_func import all_can_canopen
 import pytest
 import allure
