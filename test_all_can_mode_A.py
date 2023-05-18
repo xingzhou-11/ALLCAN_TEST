@@ -94,19 +94,19 @@ def test_mode_A_close_gpio_24V():
 def test_mode_A_open_encoder_Power():
     with allure.step("Write 1 to 0x2007"):
         ret = test1.encoderPower('w', 1)
-        assert 'Unsupported access to an object' in ret
+        assert 'Unsupported access to an object' in str(ret)
 
 @allure.feature('Mode_A read encoder value')
 def test_mode_A_read_encoder_value():
     with allure.step("Read value from 0x2006"):
         ret = test1.encoderValueRead()
-        assert 'Unsupported access to an object' in ret
+        assert 'Unsupported access to an object' in str(ret)
 
 @allure.feature('Mode_A open GPIO1 ~ GPIO4 5V output')
 def test_mode_A_gpio_5V_output():
     with allure.step("Write 1 to 0x2009"):
         ret = test1.Power_5V('w', 0x0F)
-        assert 'Unsupported access to an object' in ret
+        assert 'Unsupported access to an object' in str(ret)
         assert input('需要测量 GPIO1 ~ GPIO4 5V 输出是否已经关闭? (y/n): ') == 'y'
 
 @allure.feature('Modular mode to C')
