@@ -178,8 +178,8 @@ if __name__ == '__main__':
     name = input('输入报告的名字：')
     
     # 使用 pytest-html 进行测试，生成报告
-    pytest.main(['-s', '-q', 'test_all_can_mode_A.py', '--html={name}.html'.format(name=name)])
+    pytest.main(['-s', '-q', 'test_all_can_mode_B.py', '--html={name}.html'.format(name=name)])
     
     # 使用 allure-pytest 进行测试，生成报告
-    # pytest.main(['-s', '-q','test_all_can_mode_A.py','--clean-alluredir','--alluredir={name}'.format(name=name)])
+    # pytest.main(['-s', '-q','test_all_can_mode_B.py','--clean-alluredir','--alluredir={name}'.format(name=name)])
     # os.system(r"allure generate -c -o allure-report")
