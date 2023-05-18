@@ -177,15 +177,12 @@ def test_lss_sever():
         test2.config_node_id('w', new_node_id=1, vendor_id=int(vendor_id), product_code=int(product_code), revision_version=int(revision_version), serial_number=int(serial_number))
         test2.reset_node()
 
-
-
-# def error_handler(error) -> None:
-#     if 'No SDO response received' in error:
-#         print('SDO 连接失败，测试结束')
-#         sys.exit(0)
-#     else:
-#         pass
-
 if __name__ == '__main__':
-    pytest.main(['-s', '-q','test_all_can_mode_A.py','--clean-alluredir','--alluredir=allure-results'])
-    os.system(r"allure generate -c -o allure-report")
+    name = input('输入报告的名字：')
+    
+    # 使用 pytest-html 进行测试，生成报告
+    pytest.main(['-s', '-q', 'test_all_can_mode_A.py', '--html={name}.html'.format(name=name)])
+    
+    # 使用 allure-pytest 进行测试，生成报告
+    # pytest.main(['-s', '-q','test_all_can_mode_A.py','--clean-alluredir','--alluredir={name}'.format(name=name)])
+    # os.system(r"allure generate -c -o allure-report")
