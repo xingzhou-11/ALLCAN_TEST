@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import canopen
+import sys
 
 class all_can_canopen():
     vendor_id = 0
@@ -12,40 +13,36 @@ class all_can_canopen():
         self.network.connect(bustype='socketcan', channel=can_interface, bitrate=bitra)
         self.node = self.network.add_node(int(node_id), 'objdict.eds')
 
-    def entry_operable(self):
+    def read_node_state(self) -> str:
+        ret = self.node.nmt.state
+        return ret
+    
+    def entry_operable(self) -> None:
         self.network.nmt.state = 'OPERATIONAL'
+
+    def reset_node(self) -> None:
+        self.node.nmt.state = 'RESET'
     
     def set_heartbeat(self, value) -> None:
         val = value.to_bytes(4, byteorder='little')
         self.node.sdo.download(0x1017, 0, val)
             
-    def monitor_heartbeat(self):
+    def read_heartbeat(self) -> str:
         try:
-            self.node.nmt.wait_for_heartbeat()
+            ret = self.node.nmt.wait_for_heartbeat()
             print("CAN Heartbeat Received")
-            return True
-        except canopen.nmt.HeartbeatError:
-            print("CAN Heartbeat Error")
-            return False
-
-    def monitor_error(self):
-        try:
-            error = self.node.emcy.wait(timeout=1)
-            if error is not None:
-                print(f"Error Code: {error.code:#x}, Error Register: {error.reg:#x}")
-                return True
-        except canopen.emcy.EmcyError:
-            print("No Error Frame Received")
-            return False
-
-    def reset_node(self):
-        try:
-            self.node.nmt.state = 'RESET'
-            print("CAN Error, RESET")
+            return ret
         except Exception as e:
-            print(e)
+            return e
+
+    def read_error(self):
+        try:
+            ret = self.node.emcy.wait(timeout=1)
+            return ret  
+        except Exception as e:
+            return e
     
-    def PowerErrorReport(self):
+    def power_error_report(self):
         power_state = {
                 '0': 'no error',
                 '1': 'vcc 24V error',
@@ -54,10 +51,11 @@ class all_can_canopen():
                 '8': '2.5v error'
             }
         try:
-            val = self.node.sdo[0x2001]
-            print("Power Error Report: ", power_state[str(val.raw)])
+            ret = self.node.sdo[0x2001].raw
+            print("Power Error Report: ", power_state[str(ret)])
+            return ret
         except Exception as e:
-            print(e)
+            return e
 
     def stateModeSwitch(self) -> None:
         module_state = {
@@ -68,10 +66,11 @@ class all_can_canopen():
             '4': 'upgrade'
         }
         try:
-            val = self.node.sdo[0x2002]
-            print("sensor Mode Switch: ", module_state[str(val.raw)])
+            ret = self.node.sdo[0x2002].raw
+            print("sensor Mode Switch: ", module_state[str(ret)])
+            return ret
         except Exception as e:
-            print(e)
+            return e
             
     def workModeSwitch(self, operate, value=1) -> None:
         """work Mode Switch
@@ -87,15 +86,15 @@ class all_can_canopen():
         }
         try:
             if operate == 'r':
-                val = self.node.sdo[0x2003]
-                print("read work Mode Switch: ", module_state[str(val.raw)])
-                return val.raw
+                ret = self.node.sdo[0x2003].raw
+                print("read work Mode Switch: ", module_state[str(ret)])
+                return ret
             elif operate == "w":
                 val = value.to_bytes(1, byteorder='little')
                 self.node.sdo.download(0x2003, 0, val)
+                return value
         except Exception as e:
-            print(f'error {e}')
-            return False
+            return e
 
     def gpioRead(self) -> None:
         gpio_state = {
@@ -107,12 +106,11 @@ class all_can_canopen():
             '16': 'DIO5'
         }
         try:
-            val = self.node.sdo[0x2004]
-            print("sensor Mode Switch: ", gpio_state[str(val.raw)])
-            return val.raw
+            ret = self.node.sdo[0x2004].raw
+            print("sensor Mode Switch: ", gpio_state[str(ret)])
+            return ret
         except Exception as e:
-            print(f'error {e}')
-            return False
+            return e
 
     def event_timer(self, operate: str, value=0) -> None:
         """event timer
@@ -123,14 +121,14 @@ class all_can_canopen():
         """
         try:
             if operate == 'r':
-                val = self.node.sdo[0x1800][5]
-                print("read event timer: ", val.raw)
+                ret = self.node.sdo[0x1800][5].raw
+                return ret
             elif operate == 'w':
                 val = value.to_bytes(2, byteorder='little')
                 self.node.sdo.download(0x1800, 5, val)
-                print(f"set event timer: {value}ms")
+                return value
         except Exception as e:
-            print(f'error {e}')
+            return e
 
     def gpioPower(self, operate: str, value=0) -> None:
         """gpio Power
@@ -141,28 +139,25 @@ class all_can_canopen():
         """
         try:
             if operate == 'r':
-                val = self.node.sdo[0x2005].raw
-                print("GPIO Power Mode: ", val)
-                return val
+                ret = self.node.sdo[0x2005].raw
+                print("GPIO Power Mode: ", ret)
+                return ret
             elif operate == 'w':
                 val = value.to_bytes(1, byteorder='little')
                 self.node.sdo.download(0x2005, 0, val)
-                print(f"GPIO Power Mode: {value}")
                 return value
         except Exception as e:
-            print(f'error {e}')
-            return False
+            return e
 
     def encoderValueRead(self) -> None:
         """Read encoder Value            
         """
         try:
-            val = self.node.sdo[0x2006].raw
-            print(f'encoder Value Read: {val}')
-            return val
+            ret = self.node.sdo[0x2006].raw
+            print(f'encoder Value Read: {ret}')
+            return ret
         except Exception as e:
-            print(f'error {e}')
-            return False
+            return e
 
     def encoderPower(self, operate: str, value=0) -> None:
         """encoder Power
@@ -173,17 +168,15 @@ class all_can_canopen():
         """
         try:
             if operate == 'r':
-                val = self.node.sdo[0x2007].raw
-                print("read encoder Power Mode: ", val)
-                return val
+                ret = self.node.sdo[0x2007].raw
+                print("read encoder Power Mode: ", ret)
+                return ret
             elif operate == 'w':
                 val = value.to_bytes(1, byteorder='little')
                 self.node.sdo.download(0x2007, 0, val)
-                print(f"write encoder Power Mode: {value}")
                 return value
         except Exception as e:
-            print(f'error {e}')
-            return False
+            return e
     
     def encoder_read_time(self, operate: str, value=0) -> None:
         """设置编码器值的上报周期
@@ -194,14 +187,14 @@ class all_can_canopen():
         """
         try:
             if operate == 'r':
-                val = self.node.sdo[0x1801][5]
-                print("read encoder val: ", val.raw)
+                ret = self.node.sdo[0x1801][5].raw
+                return ret
             elif operate == 'w':
                 val = value.to_bytes(2, byteorder='little')
                 self.node.sdo.download(0x1801, 5, val)
-                print(f"set encoder timer: {value}ms")
+                return value
         except Exception as e:
-            print(f'error {e}')
+            return e
 
     def Power_5V(self, operate: str, value=0) -> None:
         """Power 5V
@@ -212,17 +205,14 @@ class all_can_canopen():
         """
         try:
             if operate == 'r':
-                val = self.node.sdo[0x2009].raw
-                print("GPIO Power Mode: ", val)
-                return val
+                ret = self.node.sdo[0x2009].raw
+                return ret
             elif operate == 'w':
                 val = value.to_bytes(1, byteorder='little')
                 self.node.sdo.download(0x2009, 0, val)
-                print(f"GPIO Power Mode: {value}")
                 return value
         except Exception as e:
-            print(f'error {e}')
-            return False
+            return e
 
     def config_node_id(self, operate: str, new_node_id=1, vendor_id=0, product_code=0, revision_version=0, serial_number=0) -> None:
         try:
@@ -247,8 +237,7 @@ class all_can_canopen():
                     self.network.lss.send_switch_state_global(self.network.lss.WAITING_STATE)
 
         except Exception as e:
-            print(f'error: {e}')
-            return False
+            return e
 
     def __delattr__(self, __name: str) -> None:
         self.network.sync.stop()
