@@ -1,0 +1,7 @@
+si 1
+speed 4000
+r
+h
+loadfile ./AllCanS/zephyr.signed.bin 0x800A000
+q
+
